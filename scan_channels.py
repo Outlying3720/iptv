@@ -45,11 +45,23 @@ def load_existing(path):
     return mapping
 
 
+def expand_families(families, expand):
+    """把每个区间向两侧各扩展 expand（下界最小 clamp 到 1）。"""
+    out = {}
+    for prefix, ranges in families.items():
+        out[prefix] = [(max(1, s - expand), e + expand) for s, e in ranges]
+    return out
+
+
 def gen_ids(families):
+    seen = set()
     for prefix, ranges in families.items():
         for start, end in ranges:
             for n in range(start, end + 1):
-                yield prefix + str(n).zfill(12)
+                cid = prefix + str(n).zfill(12)
+                if cid not in seen:
+                    seen.add(cid)
+                    yield cid
 
 
 def probe(session, cid, timeout):
@@ -73,12 +85,20 @@ def main():
     ap.add_argument("--workers", type=int, default=16, help="并发线程数")
     ap.add_argument("--timeout", type=float, default=10, help="单请求超时(秒)")
     ap.add_argument("--out", default="scan_result.txt", help="发现的新 ID 输出文件")
+    ap.add_argument("--expand", type=int, default=0,
+                    help="把每个扫描区间向两侧各扩展 N（默认0）")
     args = ap.parse_args()
 
     existing = load_existing(args.list)
     print(f"现有列表: {len(existing)} 个频道 ({len(set(existing))} 个唯一ID)")
 
-    all_ids = list(gen_ids(FAMILIES))
+    families = expand_families(FAMILIES, args.expand) if args.expand else FAMILIES
+    if args.expand:
+        print(f"区间已各向两侧扩展 {args.expand}:")
+        for pref, ranges in families.items():
+            print(f"  {pref}: {ranges}")
+
+    all_ids = list(gen_ids(families))
     total = len(all_ids)
     print(f"待扫描 ID 总数: {total}")
 
