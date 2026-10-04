@@ -1,4 +1,4 @@
-#EXTM3U
+#EXTM3U x-tvg-url="https://myepg.org/EPG/Zhejiang_Multicast.xml.gz"
 #EXTINF:-1 group-title="央视",CCTV1
 http://192.168.12.1:9999/udp/233.50.201.118:5140?fcc=220.186.213.249:8027&fcc-type=huawei
 #EXTINF:-1 group-title="央视",CCTV2
